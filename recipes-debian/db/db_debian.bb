@@ -32,10 +32,11 @@ RCONFLICTS_${PN} = "db3"
 SRC_URI += "file://fix-parallel-build.patch \
             file://0001-configure-Add-explicit-tag-options-to-libtool-invoca.patch \
             file://sequence-type.patch \
+            file://run-ptest \
            "
-FILESEXTRAPATHS =. "${COREBASE}/meta/recipes-support/db/db:"
+FILESEXTRAPATHS =. "${THISDIR}/db:${COREBASE}/meta/recipes-support/db/db:"
 
-inherit autotools
+inherit autotools ptest
 
 # The executables go in a separate package - typically there
 # is no need to install these unless doing real database
@@ -113,3 +114,24 @@ INSANE_SKIP_${PN} = "dev-so"
 INSANE_SKIP_${PN}-cxx = "dev-so"
 
 BBCLASSEXTEND = "native nativesdk"
+
+RDEPENDS_${PN}-ptest += "bash"
+
+do_compile_ptest() {
+    oe_runmake cutest
+}
+
+do_install_ptest() {
+    install -d ${D}${PTEST_PATH}
+    cp ${B}/.libs/lt-cutest ${D}${PTEST_PATH}/
+
+    cp ${WORKDIR}/run-ptest ${D}${PTEST_PATH}/
+    DB_ALL_TEST_SUITES=
+    for suite in ${DEBIAN_UNPACK_DIR}/test/c/suites/*.c
+    do
+        name=`basename -s .c $suite`
+        DB_ALL_TEST_SUITES="$DB_ALL_TEST_SUITES $name"
+    done
+    DB_ALL_TEST_SUITES=`echo $DB_ALL_TEST_SUITES`
+    sed -i -e "s/DB_ALL_TEST_SUITES/$DB_ALL_TEST_SUITES/" ${D}${PTEST_PATH}/run-ptest
+}

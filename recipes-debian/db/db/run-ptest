@@ -1,0 +1,22 @@
+#!/bin/sh
+
+output() {
+  retcode=$?
+  if [ $retcode -eq 0 ]
+    then echo "PASS: $test"
+  elif [ $retcode -eq 77 ]
+    then echo "SKIP: $test"
+  else echo "FAIL: $test"
+  fi
+}
+
+suites='DB_ALL_TEST_SUITES'
+
+# Run tests
+for test in ${suites}
+do
+  ${PWD}/lt-cutest -s $test >/dev/null 2>&1
+  output
+done
+
+exit 0
