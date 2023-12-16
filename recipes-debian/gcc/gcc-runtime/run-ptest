@@ -1,0 +1,21 @@
+#!/bin/sh
+
+output() {
+  retcode=$?
+  if [ $retcode -eq 0 ]
+    then echo "PASS: $test"
+  elif [ $retcode -eq 77 ]
+    then echo "SKIP: $test"
+  else echo "FAIL: $test"
+  fi
+}
+
+tst_items=$(find ${PWD}/tests/ -type f -name 'test-*.sh' -print)
+
+# Run tests
+for test in ${tst_items}
+do
+  $test >/dev/null 2>&1
+  output
+done
+exit 0

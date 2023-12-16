@@ -1,0 +1,28 @@
+#!/bin/sh
+
+mkdir -p ./src
+make -n check 2>&1 | \
+while read line
+do
+    line=`echo $line |sed 's/\([|<>&]\+\)/ \1 /g;s/ \+/ /g'`
+    if [ -z "$line" ]; then
+        continue
+    fi
+    set $line
+    cmd=`basename $1`
+    shift
+    for arg in $@
+    do
+        if [ -f "$arg" ]; then
+            cp -f $arg ./src/
+            file=`basename $arg`
+            line=`echo $line |sed "s|$arg|./src/$file|"`
+        fi
+    done
+    echo '#!/bin/sh'        >${cmd}.sh
+    echo 'cd `dirname $0`' >>${cmd}.sh
+    echo "$line"           >>${cmd}.sh
+    echo 'exit $?'         >>${cmd}.sh
+    chmod +x ${cmd}.sh
+done
+exit 0
